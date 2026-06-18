@@ -120,11 +120,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: Dockerfile.django-debian   # ✅ FIXED HERE
+          file: Dockerfile.django-debian
           push: true
           tags: |
-            monishshadowops/defectdojo:${{ env.TAG }}
-            monishshadowops/defectdojo:latest
+            monishs2722/defectdojo:${{ env.TAG }}
+            monishs2722/defectdojo:latest
 
   deploy_ec2:
     needs: docker_build_push
@@ -139,7 +139,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull monishshadowops/defectdojo:latest
+            docker pull monishs2722/defectdojo:latest
 
             docker stop defectdojo || true
             docker rm defectdojo || true
@@ -147,7 +147,7 @@ jobs:
             docker run -d \
               --name defectdojo \
               -p 80:8080 \
-              monishshadowops/defectdojo:latest
+              monishs2722/defectdojo:latest
 
   slack_final:
     needs: deploy_ec2
