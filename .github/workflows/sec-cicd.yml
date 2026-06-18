@@ -77,6 +77,9 @@ jobs:
     permissions:
       contents: write
 
+    outputs:
+      tag: ${{ steps.tag.outputs.new_tag }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -84,6 +87,7 @@ jobs:
           fetch-depth: 0
 
       - name: Generate version tag
+        id: tag
         uses: anothrNick/github-tag-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -100,8 +104,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Get latest tag
-        run: echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+      - name: Set TAG from versioning
+        run: echo "TAG=${{ needs.versioning.outputs.tag }}" >> $GITHUB_ENV
+
+      - name: Debug TAG
+        run: echo "Using TAG = $TAG"
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
