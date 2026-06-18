@@ -19,3 +19,52 @@ jobs:
     with:
       platform: linux/amd64
       v3_feature_locations: false
+
+  slack_after_tests:
+    needs: test-rest-framework
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Slack - Test Result
+        uses: slackapi/slack-github-action@v2
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "🧪 TEST COMPLETED\nRepo: ${{ github.repository }}\nBranch: ${{ github.ref_name }}\nStatus: ${{ needs.test-rest-framework.result }}"
+            }
+
+  trivy_scan:
+    needs: test-rest-framework
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          format: table
+
+  slack_after_scan:
+    needs: trivy_scan
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Slack - Scan Result
+        uses: slackapi/slack-github-action@v2
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "🔐 SCAN COMPLETED\nRepo: ${{ github.repository }}\nBranch: ${{ github.ref_name }}\nStatus: ${{ needs.trivy_scan.result }}"
+            }
